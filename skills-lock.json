@@ -43,6 +43,13 @@
       "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
       "computedHash": "02e258f41d210f9b2e7cce9faf62b3c59e8fcebe5d2736369c3cd07d471324f8"
     },
+    "grilling": {
+      "source": "mattpocock/skills",
+      "commit": "6f7f7831a625f040a8e06a0e7954826b87ce775a",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grilling/SKILL.md",
+      "computedHash": "485451958784497cd4c4dbea13cb5bbb579da58fac0d0e45f3bcb310fab68ac7"
+    },
     "implement": {
       "source": "mattpocock/skills",
       "commit": "6f7f7831a625f040a8e06a0e7954826b87ce775a",
