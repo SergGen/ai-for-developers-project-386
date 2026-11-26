@@ -35,9 +35,9 @@ mise run setup
 | Команда | Назначение |
 | --- | --- |
 | `mise run build` | Проверить типы и собрать фронтенд в `dist/`. |
-| `mise run check` | Запустить линтер, проверку типов и дымовой тест. Эту же команду выполняет GitHub Actions. |
+| `mise run check` | Запустить линтер, проверку типов и тесты. Эту же команду выполняет GitHub Actions. |
 | `mise exec -- npm run lint` | Запустить только Oxlint. |
-| `mise exec -- npm test` | Запустить только дымовой тест Vitest. |
+| `mise exec -- npm test` | Запустить тесты Vitest. |
 
 ### Сценарий записи на звонок
 
