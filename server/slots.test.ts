@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import type { SlotWindow } from '../generated/sdk/types.gen.ts'
-import { createApp } from './app.ts'
 import type { AppOptions } from './app.ts'
+import { withTestServer } from './test-server.ts'
 
 const consultation = {
   id: 'konsultatsiya',
@@ -11,14 +11,7 @@ const consultation = {
 }
 
 async function withSlotsServer(options: AppOptions, run: (url: string) => Promise<void>) {
-  const app = createApp({ eventTypes: [consultation], ...options })
-
-  try {
-    const address = await app.listen({ host: '127.0.0.1', port: 0 })
-    await run(`${address}/api/event-types`)
-  } finally {
-    await app.close()
-  }
+  await withTestServer({ eventTypes: [consultation], ...options }, (address) => run(`${address}/api/event-types`))
 }
 
 test('the Moscow booking window includes 14 calendar days and only offers workday slots', async () => {
@@ -68,6 +61,22 @@ test('a different event type blocks overlapping intervals while adjacent slots r
     const firstSlots = slots.slice(0, 7)
     expect(firstSlots.map(({ available }) => available))
       .toEqual([true, false, false, false, false, false, true])
+  })
+})
+
+test('a 540-minute meeting has one opening slot that ends at closing on a workday', async () => {
+  const allDayMeeting = { ...consultation, durationMinutes: 540 }
+  await withSlotsServer({
+    eventTypes: [allDayMeeting],
+    now: () => new Date('2026-11-26T21:00:00Z'),
+  }, async (url) => {
+    const response = await fetch(`${url}/${allDayMeeting.id}/slots`)
+
+    expect(response.status).toBe(200)
+    const { slots } = await response.json() as SlotWindow
+    expect(slots.filter(({ startsAt }) => startsAt.startsWith('2026-11-30'))).toEqual([
+      { startsAt: '2026-11-30T06:00:00.000Z', endsAt: '2026-11-30T15:00:00.000Z', available: true },
+    ])
   })
 })
 

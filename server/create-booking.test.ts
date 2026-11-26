@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import type { SlotWindow } from '../generated/sdk/types.gen.ts'
-import { createApp } from './app.ts'
+import { withTestServer } from './test-server.ts'
 
 const consultation = {
   id: 'konsultatsiya',
@@ -16,17 +16,10 @@ const review = {
 }
 
 async function withCalendar(run: (url: string) => Promise<void>) {
-  const app = createApp({
+  await withTestServer({
     eventTypes: [consultation, review],
     now: () => new Date('2026-11-26T21:00:00Z'),
-  })
-
-  try {
-    const address = await app.listen({ host: '127.0.0.1', port: 0 })
-    await run(address)
-  } finally {
-    await app.close()
-  }
+  }, run)
 }
 
 function postBooking(url: string, eventTypeId: string, startsAt: string, guestName = 'Анна') {

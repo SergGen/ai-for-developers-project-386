@@ -3,7 +3,8 @@ import type { SubmitEvent } from 'react'
 import { createEventType } from '../generated/sdk/sdk.gen.ts'
 
 type SaveResult =
-  | { status: 'idle' | 'saving' | 'failed' }
+  | { status: 'idle' | 'saving' }
+  | { status: 'failed'; message: string }
   | { status: 'saved'; title: string }
 
 export function OwnerPage() {
@@ -16,13 +17,24 @@ export function OwnerPage() {
 
     const form = event.currentTarget
     const fields = new FormData(form)
+    const title = String(fields.get('title'))
+    const description = String(fields.get('description'))
+    if (!title.trim()) {
+      setResult({ status: 'failed', message: 'Введите название типа встречи.' })
+      return
+    }
+    if (!description.trim()) {
+      setResult({ status: 'failed', message: 'Введите описание типа встречи.' })
+      return
+    }
+
     setResult({ status: 'saving' })
 
     try {
       const { data } = await createEventType({
         body: {
-          title: String(fields.get('title')),
-          description: String(fields.get('description')),
+          title,
+          description,
           durationMinutes: Number(fields.get('durationMinutes')),
         },
         throwOnError: true,
@@ -30,7 +42,7 @@ export function OwnerPage() {
       form.reset()
       setResult({ status: 'saved', title: data.title })
     } catch {
-      setResult({ status: 'failed' })
+      setResult({ status: 'failed', message: 'Не удалось сохранить тип встречи. Попробуйте ещё раз.' })
     }
   }
 
@@ -69,7 +81,7 @@ export function OwnerPage() {
             {result.status === 'saved' && `Тип встречи «${result.title}» сохранён.`}
           </p>
           {result.status === 'failed' && (
-            <p role="alert">Не удалось сохранить тип встречи. Попробуйте ещё раз.</p>
+            <p role="alert">{result.message}</p>
           )}
         </form>
       </section>

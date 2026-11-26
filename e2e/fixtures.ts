@@ -1,15 +1,12 @@
 import { test as base } from '@playwright/test'
 import { createServer } from 'vite'
-import { createApp } from '../server/app.ts'
 import type { AppOptions } from '../server/app.ts'
+import { withTestServer } from '../server/test-server.ts'
 
 export const test = base.extend<{ appOptions: AppOptions }>({
   appOptions: [{}, { option: true }],
   baseURL: async ({ appOptions }, provide) => {
-    const app = createApp(appOptions)
-
-    try {
-      const api = await app.listen({ host: '127.0.0.1', port: 0 })
+    await withTestServer(appOptions, async (api) => {
       const frontend = await createServer({
         server: {
           host: '127.0.0.1',
@@ -27,9 +24,7 @@ export const test = base.extend<{ appOptions: AppOptions }>({
       } finally {
         await frontend.close()
       }
-    } finally {
-      await app.close()
-    }
+    })
   },
 })
 

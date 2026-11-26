@@ -1,22 +1,15 @@
 import { expect, test } from 'vitest'
-import { createApp } from './app.ts'
+import { withTestServer } from './test-server.ts'
 
 async function withCatalog(run: (url: string) => Promise<void>) {
-  const app = createApp()
-
-  try {
-    const address = await app.listen({ host: '127.0.0.1', port: 0 })
-    await run(`${address}/api/event-types`)
-  } finally {
-    await app.close()
-  }
+  await withTestServer({}, (address) => run(`${address}/api/event-types`))
 }
 
-function postEventType(url: string, title: string, durationMinutes: unknown) {
+function postEventType(url: string, title: string, durationMinutes: unknown, description = 'Короткий звонок') {
   return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, description: 'Короткий звонок', durationMinutes }),
+    body: JSON.stringify({ title, description, durationMinutes }),
   })
 }
 
@@ -36,6 +29,34 @@ test('POST /api/event-types creates a meeting type visible in the catalog', asyn
     const catalog = await fetch(url)
     expect(catalog.status).toBe(200)
     expect(await catalog.json()).toEqual([expected])
+  })
+})
+
+test.each([
+  { field: 'title', title: '', description: 'Короткий звонок' },
+  { field: 'title', title: ' \t\u00a0', description: 'Короткий звонок' },
+  { field: 'description', title: 'Знакомство', description: '' },
+  { field: 'description', title: 'Знакомство', description: ' \n\u00a0' },
+])('POST /api/event-types rejects a blank $field without publishing it', async ({ title, description }) => {
+  await withCatalog(async (url) => {
+    const response = await postEventType(url, title, 15, description)
+
+    expect(response.status).toBe(400)
+    expect(await (await fetch(url)).json()).toEqual([])
+  })
+})
+
+test('POST /api/event-types preserves the title and description as entered', async () => {
+  await withCatalog(async (url) => {
+    const response = await postEventType(url, ' Знакомство ', 15, ' Короткий звонок ')
+
+    expect(response.status).toBe(201)
+    expect(await response.json()).toEqual({
+      id: 'znakomstvo',
+      title: ' Знакомство ',
+      description: ' Короткий звонок ',
+      durationMinutes: 15,
+    })
   })
 })
 

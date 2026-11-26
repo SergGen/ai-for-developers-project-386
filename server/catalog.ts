@@ -28,6 +28,11 @@ function eventTypeId(title: string): string {
 export function createEventType(catalog: Map<string, EventType>): RouteHandlers['createEventType'] {
   return (request, reply) => {
     const { title, description, durationMinutes } = request.body
+    if (!title.trim() || !description.trim()) {
+      reply.code(400).send({ message: 'Введите название и описание типа встречи' })
+      return
+    }
+
     const baseId = eventTypeId(title)
     let id = baseId
     for (let suffix = 2; catalog.has(id); suffix++) {

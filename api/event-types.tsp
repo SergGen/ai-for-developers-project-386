@@ -7,7 +7,9 @@ using TypeSpec.OpenAPI;
 namespace CallCalendar;
 
 model NewEventType {
+  @minLength(1)
   title: string;
+  @minLength(1)
   description: string;
   @minValue(1)
   @maxValue(540)

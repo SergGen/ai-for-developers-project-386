@@ -1,5 +1,27 @@
 import { expect, test } from './fixtures.ts'
 
+test('the owner gets field-specific feedback for whitespace-only meeting details', async ({ page }) => {
+  await page.goto('/admin')
+  const title = page.getByLabel('Название')
+  const description = page.getByLabel('Описание')
+  const save = page.getByRole('button', { name: 'Сохранить' })
+
+  await title.fill('   ')
+  await description.fill(' \n ')
+  await page.getByLabel('Длительность в минутах').fill('15')
+  await save.click()
+  await expect(page.getByRole('alert')).toHaveText('Введите название типа встречи.')
+
+  await title.fill('Знакомство')
+  await save.click()
+  await expect(page.getByRole('alert')).toHaveText('Введите описание типа встречи.')
+  await expect(title).toHaveValue('Знакомство')
+
+  await description.fill('Короткий звонок для знакомства')
+  await save.click()
+  await expect(page.getByRole('status')).toHaveText('Тип встречи «Знакомство» сохранён.')
+})
+
 test('the owner creates a meeting type that guests see in the catalog', async ({ page }) => {
   await page.goto('/')
   const adminLink = page.getByRole('link', { name: 'Админка' })

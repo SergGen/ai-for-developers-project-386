@@ -12,8 +12,11 @@ type Availability =
   | { status: 'missing' }
   | { status: 'failed' }
 
+type ReselectionReason = 'conflict' | 'expired'
+
 type Submission =
-  | { status: 'idle' | 'submitting' | 'refreshing' | 'conflict' | 'failed' }
+  | { status: 'idle' | 'submitting' | 'failed' }
+  | { status: 'refreshing' | 'refresh-failed' | 'refreshed'; reason: ReselectionReason }
   | { status: 'confirmed'; booking: ConfirmedBooking }
 
 async function loadAvailability(eventTypePath: string, signal?: AbortSignal): Promise<Availability> {
@@ -50,7 +53,7 @@ export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
   const eventType = slotWindow?.eventType
   const title = eventType?.title ?? 'Выбор слота'
   const busy = submission.status === 'submitting' || submission.status === 'refreshing'
-  const conflict = submission.status === 'conflict' || submission.status === 'refreshing'
+  const reselectionReason = 'reason' in submission ? submission.reason : undefined
   const day = selectedDay && slotWindow?.days.includes(selectedDay) ? selectedDay : slotWindow?.days[0]
 
   function selectDay(day: string) {
@@ -62,6 +65,18 @@ export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
   function selectSlot(slot: Slot) {
     setSelectedSlot(slot)
     setSubmission({ status: 'idle' })
+  }
+
+  async function refreshSlots(reason: ReselectionReason) {
+    setSubmission({ status: 'refreshing', reason })
+    setSelectedSlot(undefined)
+    const nextAvailability = await loadAvailability(eventTypePath)
+    if (nextAvailability.status === 'loaded') {
+      setAvailability(nextAvailability)
+      setSubmission({ status: 'refreshed', reason })
+    } else {
+      setSubmission({ status: 'refresh-failed', reason })
+    }
   }
 
   async function confirmBooking(event: SubmitEvent<HTMLFormElement>) {
@@ -76,10 +91,9 @@ export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
       if (data) {
         setSubmission({ status: 'confirmed', booking: data })
       } else if (response?.status === 409) {
-        setSubmission({ status: 'refreshing' })
-        setSelectedSlot(undefined)
-        setAvailability(await loadAvailability(eventTypePath))
-        setSubmission({ status: 'conflict' })
+        await refreshSlots('conflict')
+      } else if (response?.status === 400) {
+        await refreshSlots('expired')
       } else {
         setSubmission({ status: 'failed' })
       }
@@ -125,7 +139,7 @@ export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
             slots={slotWindow.slots}
             day={day}
             selectedSlot={selectedSlot}
-            disabled={busy}
+            disabled={busy || submission.status === 'refresh-failed'}
             onDayChange={selectDay}
             onSlotChange={selectSlot}
           />
@@ -144,9 +158,16 @@ export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
                 </button>
               </fieldset>
               <p role="alert">
-                {conflict && 'Это время уже занято. Выберите другой слот'}
+                {reselectionReason === 'conflict' && 'Это время уже занято. Выберите другой слот'}
+                {reselectionReason === 'expired' && 'Выбранный слот больше недоступен. Выберите другое время.'}
+                {submission.status === 'refresh-failed' && ' Не удалось обновить слоты.'}
                 {submission.status === 'failed' && 'Не удалось подтвердить запись. Попробуйте ещё раз.'}
               </p>
+              {submission.status === 'refresh-failed' && (
+                <button className="booking-link" type="button" onClick={() => refreshSlots(submission.reason)}>
+                  Повторить загрузку
+                </button>
+              )}
             </form>
           </section>
         </>
