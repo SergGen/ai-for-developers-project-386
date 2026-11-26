@@ -10,20 +10,34 @@
 
 ## Стек
 
-- Разное
+- Фронтенд — React, TypeScript и Vite.
+- Бекенд — Fastify и TypeScript.
+- Проверки — Oxlint, TypeScript и Vitest.
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
+Установите [mise](https://mise.jdx.dev/getting-started.html). Из корня репозитория выполните:
 
 ```bash
 git clone https://github.com/SergGen/ai-for-developers-project-386.git
 cd ai-for-developers-project-386
+mise trust
+mise install
+mise run setup
 ```
 
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+Запустите `mise run backend` и `mise run frontend` в отдельных терминалах. Откройте адрес, который выведет Vite, обычно `http://localhost:5173`. Запрос к `http://127.0.0.1:3000/health` вернёт HTTP 200 и `{"status":"ok"}`. В режиме разработки Vite также проксирует `/health` на Fastify.
+
+### Сборка и проверки
+
+| Команда | Назначение |
+| --- | --- |
+| `mise run build` | Проверить типы и собрать фронтенд в `dist/`. |
+| `mise run check` | Запустить линтер, проверку типов и дымовой тест. Эту же команду выполняет GitHub Actions. |
+| `mise exec -- npm run lint` | Запустить только Oxlint. |
+| `mise exec -- npm test` | Запустить только дымовой тест Vitest. |
 
 ### Сценарий записи на звонок
 

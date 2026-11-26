@@ -1,0 +1,19 @@
+name: CI
+
+on: push
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
+        with:
+          version: '2026.11.14'
+      - run: mise run setup
+      - run: mise run check
