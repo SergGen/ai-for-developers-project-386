@@ -12,16 +12,17 @@ interface SlotPickerProps {
   slots: Slot[]
   day: string
   selectedSlot?: Slot
+  disabled: boolean
   onDayChange: (day: string) => void
   onSlotChange: (slot: Slot) => void
 }
 
-export function SlotPicker({ days, slots, day, selectedSlot, onDayChange, onSlotChange }: SlotPickerProps) {
+export function SlotPicker({ days, slots, day, selectedSlot, disabled, onDayChange, onSlotChange }: SlotPickerProps) {
   const daySlots = slots.filter((slot) => slotDate(slot.startsAt) === day)
 
   return (
     <div className="slot-picker">
-      <fieldset>
+      <fieldset disabled={disabled}>
         <legend>День звонка</legend>
         <p className="slot-picker-note">Дата и время по Москве</p>
         <div className="day-choices">
@@ -47,7 +48,7 @@ export function SlotPicker({ days, slots, day, selectedSlot, onDayChange, onSlot
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset disabled={disabled}>
         <legend>Время звонка</legend>
         {daySlots.length === 0 ? <p role="status">На этот день слотов нет.</p> : (
           <div className="time-choices">

@@ -20,12 +20,6 @@ model SlotWindow {
   slots: Slot[];
 }
 
-@error
-model EventTypeNotFound {
-  @statusCode statusCode: 404;
-  @body body: { message: string };
-}
-
 @get
 @route("/api/event-types/{id}/slots")
 @operationId("listSlots")

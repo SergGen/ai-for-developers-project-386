@@ -34,6 +34,21 @@ export function slotsForDay(day: string, durationMinutes: number): Interval[] {
   return intervals
 }
 
+export function slotAt(startsAt: string, durationMinutes: number, now: Date): Interval | undefined {
+  let start: Temporal.Instant
+  try {
+    start = Temporal.Instant.from(startsAt)
+  } catch (error) {
+    if (error instanceof RangeError) return
+    throw error
+  }
+
+  const day = start.toZonedDateTimeISO(timeZone).toPlainDate().toString()
+  if (!bookingDays(now).includes(day)) return
+
+  return slotsForDay(day, durationMinutes).find((slot) => start.equals(slot.startsAt))
+}
+
 export function overlaps(first: Interval, second: Interval): boolean {
   return Date.parse(first.startsAt) < Date.parse(second.endsAt)
     && Date.parse(second.startsAt) < Date.parse(first.endsAt)

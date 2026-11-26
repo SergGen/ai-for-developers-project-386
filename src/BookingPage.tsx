@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { listSlots } from '../generated/sdk/sdk.gen.ts'
-import type { Slot, SlotWindow } from '../generated/sdk/types.gen.ts'
+import type { SubmitEvent } from 'react'
+import { createBooking, listSlots } from '../generated/sdk/sdk.gen.ts'
+import type { ConfirmedBooking, Slot, SlotWindow } from '../generated/sdk/types.gen.ts'
+import { formatBookingDate, formatSlotTime } from './bookingTime.ts'
 import { SlotPicker } from './SlotPicker.tsx'
 import './BookingPage.css'
 
@@ -10,41 +12,86 @@ type Availability =
   | { status: 'missing' }
   | { status: 'failed' }
 
+type Submission =
+  | { status: 'idle' | 'submitting' | 'refreshing' | 'conflict' | 'failed' }
+  | { status: 'confirmed'; booking: ConfirmedBooking }
+
+async function loadAvailability(eventTypePath: string, signal?: AbortSignal): Promise<Availability> {
+  try {
+    const { data, response } = await listSlots({
+      path: { id: decodeURIComponent(eventTypePath) },
+      signal,
+    })
+    if (data) return { status: 'loaded', window: data }
+
+    return { status: response?.status === 404 ? 'missing' : 'failed' }
+  } catch {
+    return { status: 'failed' }
+  }
+}
+
 export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
   const [availability, setAvailability] = useState<Availability>({ status: 'loading' })
   const [selectedDay, setSelectedDay] = useState<string>()
   const [selectedSlot, setSelectedSlot] = useState<Slot>()
+  const [guestName, setGuestName] = useState('')
+  const [submission, setSubmission] = useState<Submission>({ status: 'idle' })
 
   useEffect(() => {
     const controller = new AbortController()
 
-    async function loadAvailability() {
-      try {
-        const { data, response } = await listSlots({
-          path: { id: decodeURIComponent(eventTypePath) },
-          signal: controller.signal,
-        })
-        if (controller.signal.aborted) return
-
-        if (data) setAvailability({ status: 'loaded', window: data })
-        else setAvailability({ status: response?.status === 404 ? 'missing' : 'failed' })
-      } catch {
-        if (!controller.signal.aborted) setAvailability({ status: 'failed' })
-      }
-    }
-
-    void loadAvailability()
+    void loadAvailability(eventTypePath, controller.signal).then((nextAvailability) => {
+      if (!controller.signal.aborted) setAvailability(nextAvailability)
+    })
     return () => controller.abort()
   }, [eventTypePath])
-
-  function selectDay(day: string) {
-    setSelectedDay(day)
-    setSelectedSlot(undefined)
-  }
 
   const slotWindow = availability.status === 'loaded' ? availability.window : undefined
   const eventType = slotWindow?.eventType
   const title = eventType?.title ?? 'Выбор слота'
+  const busy = submission.status === 'submitting' || submission.status === 'refreshing'
+  const conflict = submission.status === 'conflict' || submission.status === 'refreshing'
+  const day = selectedDay && slotWindow?.days.includes(selectedDay) ? selectedDay : slotWindow?.days[0]
+
+  function selectDay(day: string) {
+    setSelectedDay(day)
+    setSelectedSlot(undefined)
+    setSubmission({ status: 'idle' })
+  }
+
+  function selectSlot(slot: Slot) {
+    setSelectedSlot(slot)
+    setSubmission({ status: 'idle' })
+  }
+
+  async function confirmBooking(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (busy || !eventType || !selectedSlot || !guestName.trim()) return
+
+    setSubmission({ status: 'submitting' })
+    try {
+      const { data, response } = await createBooking({
+        body: { eventTypeId: eventType.id, startsAt: selectedSlot.startsAt, guestName },
+      })
+      if (data) {
+        setSubmission({ status: 'confirmed', booking: data })
+      } else if (response?.status === 409) {
+        setSubmission({ status: 'refreshing' })
+        setSelectedSlot(undefined)
+        setAvailability(await loadAvailability(eventTypePath))
+        setSubmission({ status: 'conflict' })
+      } else {
+        setSubmission({ status: 'failed' })
+      }
+    } catch {
+      setSubmission({ status: 'failed' })
+    }
+  }
+
+  async function retryAvailability() {
+    setAvailability({ status: 'loading' })
+    setAvailability(await loadAvailability(eventTypePath))
+  }
 
   return (
     <main className="page">
@@ -57,16 +104,52 @@ export function BookingPage({ eventTypePath }: { eventTypePath: string }) {
 
       {availability.status === 'loading' && <p role="status">Загружаем слоты…</p>}
       {availability.status === 'missing' && <p role="alert">Тип встречи не найден.</p>}
-      {availability.status === 'failed' && <p role="alert">Не удалось загрузить слоты. Обновите страницу.</p>}
-      {slotWindow && (
-        <SlotPicker
-          days={slotWindow.days}
-          slots={slotWindow.slots}
-          day={selectedDay ?? slotWindow.days[0]}
-          selectedSlot={selectedSlot}
-          onDayChange={selectDay}
-          onSlotChange={setSelectedSlot}
-        />
+      {availability.status === 'failed' && (
+        <div className="booking-form">
+          <p role="alert">Не удалось загрузить слоты.</p>
+          <button className="booking-link" type="button" onClick={retryAvailability}>Повторить загрузку</button>
+        </div>
+      )}
+      <div role="status">
+        {submission.status === 'confirmed' && (
+          <section className="booking-guide">
+            <h2>Запись подтверждена</h2>
+            <p>{formatBookingDate(submission.booking.startsAt)} · {formatSlotTime(submission.booking)} по Москве</p>
+          </section>
+        )}
+      </div>
+      {slotWindow && day && submission.status !== 'confirmed' && (
+        <>
+          <SlotPicker
+            days={slotWindow.days}
+            slots={slotWindow.slots}
+            day={day}
+            selectedSlot={selectedSlot}
+            disabled={busy}
+            onDayChange={selectDay}
+            onSlotChange={selectSlot}
+          />
+          <section className="booking-guide" aria-labelledby="confirm-booking-title">
+            <h2 id="confirm-booking-title">Подтверждение записи</h2>
+            <form className="booking-form" onSubmit={confirmBooking}>
+              {selectedSlot && <p>{formatBookingDate(selectedSlot.startsAt)} · {formatSlotTime(selectedSlot)} по Москве</p>}
+              <fieldset disabled={busy}>
+                <label>
+                  Ваше имя
+                  <input name="guestName" autoComplete="name" value={guestName}
+                    onChange={(event) => setGuestName(event.target.value)} required />
+                </label>
+                <button className="booking-link" type="submit" disabled={!selectedSlot || !guestName.trim()}>
+                  {submission.status === 'submitting' ? 'Подтверждаем…' : 'Подтвердить запись'}
+                </button>
+              </fieldset>
+              <p role="alert">
+                {conflict && 'Это время уже занято. Выберите другой слот'}
+                {submission.status === 'failed' && 'Не удалось подтвердить запись. Попробуйте ещё раз.'}
+              </p>
+            </form>
+          </section>
+        </>
       )}
     </main>
   )

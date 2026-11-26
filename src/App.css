@@ -130,12 +130,12 @@
   text-underline-offset: 0.2em;
 }
 
-.event-type-form {
+:is(.event-type-form, .booking-form) {
   max-width: 32rem;
   margin-block-start: 1.25rem;
 }
 
-.event-type-form fieldset {
+:is(.event-type-form, .booking-form) fieldset {
   display: grid;
   justify-items: start;
   gap: 1rem;
@@ -145,15 +145,15 @@
   border: 0;
 }
 
-.event-type-form label {
+:is(.event-type-form, .booking-form) label {
   display: grid;
   gap: 0.25rem;
   width: 100%;
   font-weight: 600;
 }
 
-.event-type-form input,
-.event-type-form textarea {
+:is(.event-type-form, .booking-form) input,
+:is(.event-type-form, .booking-form) textarea {
   width: 100%;
   min-height: 2.75rem;
   padding: 0.5rem 0.75rem;
@@ -164,33 +164,33 @@
   font-weight: 400;
 }
 
-.event-type-form textarea {
+:is(.event-type-form, .booking-form) textarea {
   resize: vertical;
 }
 
-.event-type-form button {
+:is(.event-type-form, .booking-form) button {
   border: 0;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
-.event-type-form button:disabled {
+:is(.event-type-form, .booking-form) button:disabled {
   background-color: #455e58;
   cursor: default;
 }
 
 .page-links a:focus-visible,
-.event-type-form input:focus-visible,
-.event-type-form textarea:focus-visible {
+:is(.event-type-form, .booking-form) input:focus-visible,
+:is(.event-type-form, .booking-form) textarea:focus-visible {
   outline: 3px solid #0a615b;
   outline-offset: 3px;
 }
 
-.event-type-form [role='status']:empty {
+:is(.event-type-form, .booking-form) [role='status']:empty {
   margin: 0;
 }
 
-.event-type-form [role='alert'] {
+:is(.event-type-form, .booking-form) [role='alert'] {
   color: #9b2929;
 }

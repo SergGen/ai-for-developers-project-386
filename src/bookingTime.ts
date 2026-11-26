@@ -7,6 +7,12 @@ const dateInMoscow = new Intl.DateTimeFormat('en', {
   timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit',
 })
 
+const fullDateInMoscow = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', dateStyle: 'long' })
+
+export function formatBookingDate(startsAt: string): string {
+  return fullDateInMoscow.format(new Date(startsAt))
+}
+
 export function slotDate(startsAt: string): string {
   const parts = dateInMoscow.formatToParts(new Date(startsAt))
   return ['year', 'month', 'day'].map((part) => parts.find(({ type }) => type === part)?.value).join('-')

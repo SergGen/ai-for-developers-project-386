@@ -3,6 +3,7 @@ import openapiGlue from 'fastify-openapi-glue'
 import { fileURLToPath } from 'node:url'
 import type { RouteHandlers } from '../generated/sdk/fastify.gen.ts'
 import type { EventType } from '../generated/sdk/types.gen.ts'
+import { createBooking } from './bookings.ts'
 import type { Booking } from './bookings.ts'
 import { createEventType, listEventTypes } from './catalog.ts'
 import { listSlots } from './slots.ts'
@@ -23,6 +24,7 @@ export function createApp({ eventTypes = [], now = () => new Date(), bookings = 
     listEventTypes: listEventTypes(catalog),
     createEventType: createEventType(catalog),
     listSlots: listSlots(catalog, calendar, now),
+    createBooking: createBooking(catalog, calendar, now),
   }
 
   app.get('/health', async () => ({ status: 'ok' }))

@@ -122,3 +122,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.booking-form [role='alert']:empty {
+  margin: 0;
+}

@@ -33,3 +33,9 @@ model EventTypeCreated {
 @route("/api/event-types")
 @operationId("createEventType")
 op createEventType(@body eventType: NewEventType): EventTypeCreated | BadRequestResponse;
+
+@error
+model EventTypeNotFound {
+  @statusCode statusCode: 404;
+  @body body: { message: string };
+}
