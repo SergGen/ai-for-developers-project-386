@@ -3,7 +3,7 @@ name: Release Please
 on:
   push:
     branches:
-      - main
+      - codex/hexlet-release-check
 
 concurrency:
   group: release-please
@@ -18,4 +18,5 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         with:
-          target-branch: main
+          target-branch: codex/hexlet-release-check
+          skip-github-release: true
