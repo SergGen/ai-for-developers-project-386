@@ -16,4 +16,5 @@ jobs:
         with:
           version: '2026.11.14'
       - run: mise run setup
+      - run: mise exec -- npx playwright install --with-deps chromium
       - run: mise run check

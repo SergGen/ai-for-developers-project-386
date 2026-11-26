@@ -24,18 +24,20 @@ cd ai-for-developers-project-386
 mise trust
 mise install
 mise run setup
+mise exec -- npx playwright install chromium
 ```
 
 ## Использование
 
-Запустите `mise run backend` и `mise run frontend` в отдельных терминалах. Откройте адрес, который выведет Vite, обычно `http://localhost:5173`. Запрос к `http://127.0.0.1:3000/health` вернёт HTTP 200 и `{"status":"ok"}`. В режиме разработки Vite также проксирует `/health` на Fastify.
+Запустите `mise run backend` и `mise run frontend` в отдельных терминалах. Откройте адрес, который выведет Vite, обычно `http://localhost:5173`. Запрос к `http://127.0.0.1:3000/health` вернёт HTTP 200 и `{"status":"ok"}`. Vite проксирует `/health` и `/api` на Fastify.
 
 ### Сборка и проверки
 
 | Команда | Назначение |
 | --- | --- |
 | `mise run build` | Проверить типы и собрать фронтенд в `dist/`. |
-| `mise run check` | Запустить линтер, проверку типов и тесты. Эту же команду выполняет GitHub Actions. |
+| `mise exec -- npm run generate` | Пересобрать OpenAPI из TypeSpec, Fetch SDK и типы обработчиков Fastify. Новые файлы появляются в `generated/`. |
+| `mise run check` | Пересобрать API, запустить линтер, проверку типов, Vitest и браузерные тесты с настоящим API. Эту же команду выполняет GitHub Actions. |
 | `mise exec -- npm run lint` | Запустить только Oxlint. |
 | `mise exec -- npm test` | Запустить тесты Vitest. |
 

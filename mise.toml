@@ -2,8 +2,8 @@
 node = "26.13.1"
 
 [tasks.setup]
-description = "Install project dependencies"
-run = "npm ci"
+description = "Install project dependencies and generate the API"
+run = ["npm ci", "npm run generate"]
 
 [tasks.frontend]
 description = "Start the Vite development server"
@@ -18,5 +18,5 @@ description = "Build the frontend"
 run = "npm run build"
 
 [tasks.check]
-description = "Run the linter, type checks, and tests"
-run = ["npm run lint", "npm run typecheck", "npm test"]
+description = "Generate the API and run lint, type checks, and tests"
+run = ["npm run generate", "npm run lint", "npm run typecheck", "npm test", "npm run test:e2e"]

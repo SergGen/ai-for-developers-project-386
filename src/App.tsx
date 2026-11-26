@@ -1,16 +1,9 @@
+import { CatalogPage } from './CatalogPage.tsx'
 import './App.css'
 
 function App() {
   if (window.location.pathname === '/book' || window.location.pathname === '/book/') {
-    return (
-      <main className="page">
-        <title>Каталог типов встреч — Календарь звонков</title>
-        <header className="intro">
-          <h1>Каталог типов встреч</h1>
-          <p>Здесь появятся типы встреч, доступные для записи.</p>
-        </header>
-      </main>
-    )
+    return <CatalogPage />
   }
 
   return (

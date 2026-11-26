@@ -36,6 +36,5 @@ test('the home page explains how to book and links to the catalog', () => {
 test('the booking address opens the meeting type catalog', () => {
   renderPage('/book', (page) => {
     expect(page.querySelector('h1')?.textContent).toBe('Каталог типов встреч')
-    expect(page.textContent).toContain('Здесь появятся типы встреч, доступные для записи')
   })
 })
