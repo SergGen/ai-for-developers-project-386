@@ -1,0 +1,31 @@
+name: Preview release candidate
+
+on:
+  push:
+    branches: [codex/hexlet-release-check]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26.13.1'
+      - name: Preview release PR
+        env:
+          RELEASE_PREVIEW_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          token_file=$(mktemp "$RUNNER_TEMP/release-please-token.XXXXXX")
+          trap 'rm -f "$token_file"' EXIT
+          printf '%s' "$RELEASE_PREVIEW_TOKEN" > "$token_file"
+          unset RELEASE_PREVIEW_TOKEN
+          npx --yes release-please@17.6.0 release-pr \
+            --token="$token_file" \
+            --repo-url="$GITHUB_REPOSITORY" \
+            --target-branch="$GITHUB_REF_NAME" \
+            --dry-run
