@@ -1,9 +1,14 @@
 import { BookingPage } from './BookingPage.tsx'
 import { CatalogPage } from './CatalogPage.tsx'
 import { OwnerPage } from './OwnerPage.tsx'
+import { UpcomingBookingsPage } from './UpcomingBookingsPage.tsx'
 import './App.css'
 
 function App() {
+  if (window.location.pathname === '/admin/upcoming' || window.location.pathname === '/admin/upcoming/') {
+    return <UpcomingBookingsPage />
+  }
+
   if (window.location.pathname === '/admin' || window.location.pathname === '/admin/') {
     return <OwnerPage />
   }

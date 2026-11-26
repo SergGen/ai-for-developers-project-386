@@ -42,3 +42,8 @@ model SlotConflict {
 @route("/api/bookings")
 @operationId("createBooking")
 op createBooking(@body booking: NewBooking): BookingCreated | InvalidBooking | EventTypeNotFound | SlotConflict;
+
+@get
+@route("/api/bookings/upcoming")
+@operationId("listUpcomingBookings")
+op listUpcomingBookings(): ConfirmedBooking[];

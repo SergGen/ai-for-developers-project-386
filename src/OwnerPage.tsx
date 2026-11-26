@@ -40,6 +40,7 @@ export function OwnerPage() {
       <header className="intro">
         <h1>Админка</h1>
         <nav className="page-links" aria-label="Разделы календаря">
+          <a href="/admin/upcoming">Предстоящие встречи</a>
           <a href="/book">Каталог типов встреч</a>
         </nav>
       </header>

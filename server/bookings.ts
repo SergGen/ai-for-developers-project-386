@@ -8,6 +8,24 @@ export interface Booking extends Interval {
   guestName: string
 }
 
+export function listUpcomingBookings(
+  catalog: ReadonlyMap<string, EventType>,
+  calendar: readonly Booking[],
+  now: () => Date,
+): RouteHandlers['listUpcomingBookings'] {
+  return (_request, reply) => {
+    const currentTime = now().getTime()
+    const bookings = calendar
+      .filter(({ startsAt }) => Date.parse(startsAt) > currentTime)
+      .sort((first, second) => Date.parse(first.startsAt) - Date.parse(second.startsAt))
+      .flatMap(({ eventTypeId, ...booking }) => {
+        const eventType = catalog.get(eventTypeId)
+        return eventType ? [{ ...booking, eventType }] : []
+      })
+    reply.code(200).send(bookings)
+  }
+}
+
 export function createBooking(
   catalog: ReadonlyMap<string, EventType>,
   calendar: Booking[],

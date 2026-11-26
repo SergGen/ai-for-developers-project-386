@@ -71,12 +71,17 @@ test('concurrent requests for overlapping intervals create only the winning book
       postBooking(url, consultation.id, '2026-11-30T07:45:00Z', 'Борис'),
     ])
     expect([longBooking.status, shortBooking.status].sort()).toEqual([201, 409])
+    const longBookingWon = longBooking.status === 201
+    const winner = longBookingWon ? longBooking : shortBooking
+
+    const upcoming = await fetch(`${url}/api/bookings/upcoming`)
+    expect(upcoming.status).toBe(200)
+    expect(await upcoming.json()).toEqual([await winner.json()])
 
     const response = await fetch(`${url}/api/event-types/${consultation.id}/slots`)
     expect(response.status).toBe(200)
     const { slots } = await response.json() as SlotWindow
     const availability = new Map(slots.map(({ startsAt, available }) => [startsAt, available]))
-    const longBookingWon = longBooking.status === 201
     // The 10:00 and 11:00 slots each intersect only one of the two proposed bookings.
     expect(availability.get('2026-11-30T07:00:00.000Z')).toBe(!longBookingWon)
     expect(availability.get('2026-11-30T07:45:00.000Z')).toBe(false)
