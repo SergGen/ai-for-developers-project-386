@@ -40,7 +40,7 @@ export function CatalogPage() {
         <ul className="catalog">
           {result.eventTypes.map(({ id, title, description, durationMinutes }) => (
             <li key={id}>
-              <h2>{title}</h2>
+              <h2><a href={`/book/${encodeURIComponent(id)}`}>{title}</a></h2>
               <p>{description}</p>
               <p>{durationMinutes} мин.</p>
             </li>

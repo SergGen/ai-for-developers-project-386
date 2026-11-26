@@ -1,6 +1,7 @@
 import "@typespec/http";
 import "@typespec/openapi3";
 import "./event-types.tsp";
+import "./slots.tsp";
 
 using TypeSpec.Http;
 

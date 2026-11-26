@@ -1,3 +1,4 @@
+import { BookingPage } from './BookingPage.tsx'
 import { CatalogPage } from './CatalogPage.tsx'
 import './App.css'
 
@@ -5,6 +6,9 @@ function App() {
   if (window.location.pathname === '/book' || window.location.pathname === '/book/') {
     return <CatalogPage />
   }
+
+  const eventType = /^\/book\/([^/]+)\/?$/.exec(window.location.pathname)
+  if (eventType) return <BookingPage eventTypePath={eventType[1]} />
 
   return (
     <main className="page">
