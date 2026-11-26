@@ -31,6 +31,8 @@ mise exec -- npx playwright install chromium
 
 Запустите `mise run backend` и `mise run frontend` в отдельных терминалах. Откройте адрес, который выведет Vite, обычно `http://localhost:5173`. Запрос к `http://127.0.0.1:3000/health` вернёт HTTP 200 и `{"status":"ok"}`. Vite проксирует `/health` и `/api` на Fastify.
 
+Типы встреч и записи хранятся в памяти процесса и сбрасываются при перезапуске сервера.
+
 ### Сборка и проверки
 
 | Команда | Назначение |

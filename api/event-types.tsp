@@ -6,8 +6,7 @@ using TypeSpec.OpenAPI;
 
 namespace CallCalendar;
 
-model EventType {
-  id: string;
+model NewEventType {
   title: string;
   description: string;
   @minValue(1)
@@ -15,7 +14,22 @@ model EventType {
   durationMinutes: int32;
 }
 
+model EventType {
+  id: string;
+  ...NewEventType;
+}
+
 @get
 @route("/api/event-types")
 @operationId("listEventTypes")
 op listEventTypes(): EventType[];
+
+model EventTypeCreated {
+  @statusCode statusCode: 201;
+  @body eventType: EventType;
+}
+
+@post
+@route("/api/event-types")
+@operationId("createEventType")
+op createEventType(@body eventType: NewEventType): EventTypeCreated | BadRequestResponse;
